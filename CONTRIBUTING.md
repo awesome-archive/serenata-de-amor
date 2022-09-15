@@ -1,102 +1,100 @@
-# How to contribute?
+# Contributing Guide
 
-## Before start
+## Before you start
 
-If you work with statistics but not a coder or a developer that are not used to the routine below or just willing to learn, share ideas and catch-up, join us in the [Telegram Open Group](http://bit.ly/2cUBFr6). This group keep their language in English to be internationally open and we make Telegram the official channel to make easy for non-developers to reach the technical group.
+Please, make sure you have read the [_Tech crash course_](README.md#tech-crash-course-into-operação-serenata-de-amor) – you already know what Rosie, Jarbas, Whistleblower and the toolbox are about, right?
 
-## The basic
+Also we have a 700+ members tech community to support you on [our Telegram open tech group](https://telegram.me/joinchat/AKDWc0BDOqriD1n-mntRBg). Don't hesitate to reach us there.
 
-A lot of discussions about ideas take place in the [Issues](https://github.com/datasciencebr/serenata-de-amor/issues) section. There you can catch up with what's going on and also suggest new ideas.
+## Installing
 
-1. _Fork_ this repository
-2. Create your branch: `$ git checkout -b new-stuff`
-3. Commit your changes: `$ git commit -am 'My cool contribution'`
-4. Push to the branch to your fork: `$ git push origin new-stuff`
-5. Create a new _Pull Request_
+As our stack is not a simple one we opted for standardizing our instructions do [Docker Compose](https://docs.docker.com/compose/install/), which will help you spin up every service in a few commands.
 
-## Environment
-
-The recommended way of setting your environment up is with [Anaconda](https://www.continuum.io/), a Python distribution with useful packages for Data Science. [Download it](https://www.continuum.io/downloads) and create an _environment_ for the project.
+Everything is expected to work with:
 
 ```console
-$ conda update conda
-$ conda create --name serenata_de_amor python=3
-$ source activate serenata_de_amor
-$ ./setup
+$ cp contrib/.env.sample .env
+$ docker-compose up
 ```
 
-The `activate serenata_de_amor` command must be run every time you enter in the project folder to start working.
+**Note:** `docker-compose up` is just a health check to assure all dependencies are succesfully installed and the project is running well. To run properly Jarbas and Rosie there are a few more steps (migrations, for example), which are the ones below.
 
-### Pyenv users
+Then `.env` file you just copied contains [environment variables for Jarbas](jarbas/README.md#settings). Feel free to customize it.
 
-If you installed Anaconda via [pyenv](https://github.com/yyuu/pyenv) probably `source activate serenata_de_amor` will fail _unless_ you explicitly use the path to the Anaconta `activate` script. For example:
+### Running Rosie
+
+Example to run only Rosie:
 
 ```console
-$ source /usr/local/var/pyenv/versions/anaconda3-4.1.1/bin/activate serenata_de_amor
+$ docker-compose run --rm rosie python rosie.py run chamber_of_deputies
 ```
 
-## Best practices
+[Check Rosie's `README.md` for more details](rosie/README.md).
 
-In order to avoid tons of conflicts when trying to merge [Jupyter Notebooks](http://jupyter.org), there are some [guidelines we follow](http://www.svds.com/jupyter-notebook-best-practices-for-data-science/).
+### Running Jarbas
 
-Basically we have four big directories with different purposes:
+This is an example to run only Jarbas. First run migrations and provision:
 
-| Directory | Purpose | File naming |
-|-----------|---------|-------------|
-| **`develop/`** | This is where we _explore_ data, feel free to create your own notebook for your exploration. | `[ISO 8601 date]-[author-initials]-[2-4 word description].ipynb` (e.g. `2016-05-13-ec-air-tickets.ipynb`) |
-|**`report/`** | This is where we write up the findings and results, here is where we put together different data, analysis and strategies to make a point, feel free to jump in. | Meaninful title for the report (e.g. `Transport-allowances.ipybn` |
-| **`src/`** | This is where our auxiliary scripts lies, code to scrap data, to convert stuff etc. | Small caps, no special character, `-` instead of spaces. |
-| **`data/`** | This is not supposed to be committed, but it is where saved databases will be stored locally (scripts from `src/` should be able to get this data for you); a copy of this data will be available elsewhere (_just in case_). | Small caps, no special character, `-` instead of spaces. |
+```console
+$ docker-compose run --rm django python manage.py migrate
+$ docker-compose run --rm django python manage.py reimbursements /mnt/data/reimbursements_sample.csv
+$ docker-compose run --rm django python manage.py companies /mnt/data/companies_sample.xz
+$ docker-compose run --rm django python manage.py suspicions /mnt/data/suspicions_sample.xz
+$ docker-compose run --rm django python manage.py searchvector
+$ docker-compose run --rm django python manage.py tweets
+```
 
-### Source files (`src/`)
+The spin up the web server:
 
-Here we explain what each script from `src/` does for you:
+```console
+$ docker-compose up django
+```
 
-##### One script to rule them all
+Then browse from [`0.0.0.0:8000`](http://0.0.0.0:8000). [Check Jarbas's `README.md` for more details](jarbas/README.md).
 
-1. `src/fetch_datasets.py` dowloads all the available datasets to `data/` is `.xz` compressed CSV format with headers translated to English.
+## The basics of contributing
+
+A lot of discussions about ideas take place in the [Issues](https://github.com/okfn-brasil/serenata-de-amor/issues) section. There and interacting in the Telegram group you can catch up with what's going on and also suggest new ideas.
+
+Unfortunatelly we have no public roadmap, barely an internal one – but you can follow what the core team is working on [on Trello](https://trello.com/b/5sE3ToT2/serenata).
+
+### The Git basics
+
+**1. _Fork_ this repository**
+
+There's a big button for that in GitHub interface, usually on the top right corner.
+
+**2. Clone your fork of the repository**
+
+```console
+$ git clone http://github.com/<YOUR-GITHUB-USERNAME>/serenata-de-amor.git
+```
+
+**3. Create a feature branch**
+
+```console
+$ git checkout -b <YOUR-GITHUB-USERNAME>-new-stuff
+```
+
+Please, note that we prefix branch names with GitHub usernames, this helps us in keeping track of changes and who is working on them.
 
 
-##### Quota for Exercising Parliamentary Activity (CEAP)
+**4. Do what you do best**
 
-1. `src/fetch_datasets.py --from-source` dowloads all CEAP datasets to `data/` from the official source (in XML format in Portuguese) .
-1. `src/fetch_datasets.py` dowloads the CEAP datasets into `data/`; it can download them from the official source (in XML format in Portuguese) or from our backup server (`.xz` compressed CSV format, with headers translated to English).
-1. `src/xml2csv.py` converts the original XML datasets to `.xz` compressed CSV format.
-1. `src/translate_datasets.py` translates the datasets file names and the labels of the variables within these files.
-1. `src/translation_table.py` creates a `data/YYYY-MM-DD-ceap-datasets.md` file with details of the meaning and of the translation of each variable from the _Quota for Exercising Parliamentary Activity_ datasets.
+Now it's your time to shine and write meaningful code to raise the bar of the project!
 
-##### Suppliers information (CNPJ)
+**5. Commit your changes**
 
-1. `src/fetch_cnpj_info.py` iterate over the CEAP datasets looking for supplier unique documents (CNPJ) and create a local dataset with each supplier info.
-1. `src/clean_cnpj_info_dataset.py` clean up and translate the supplier info dataset.
-1. `src/geocode_addresses.py` iterate over the supplier info dataset and add geolocation data to it (it uses the Google Maps API set in `config.ini`).
+```console
+$ git commit -am 'My pretty cool contribution'
+```
 
-##### Miscellaneous
-1. `src/backup_data.py` uploads files from `data/` to an Amazon S3 bucket set on `config.ini` .
+**6. Push to the branch to your fork**
 
-### Datasets (`data/`)
+```consle
+$ git push origin <YOUR-GITHUB-USERNAME>-new-stuff
+```
 
-Here we explain what are the datasets inside `data/`. They are not part of this repository, but downloaded with the scripts from `src/`. Most files are `.xz` compressed CSV.
-All files are named with a [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601) date suffix.
+**7. Create a new _Pull Request_**
 
-1. `data/YYYY-MM-DD-current-year.xz`, `data/YYYY-MM-DD-last-year.xz` and `data/YYYY-MM-DD-previous-years.xz`: Datasets from the _Quota for Exercising Parliamentary Activity_; for details on its variables and meaning, check `data/YYYY-MM-DD-ceap-datasets.md`.
-1. `data/datasets-format.html`: Original HTML in Portuguese from the Chamber of Deputies explaining CEAP dataset variables.
-1. `data/YYYY-MM-DD-ceap-datasets.md`: Table comparing contents from `data/YYYY-MM-DD-datasets_format.html` and our translation of variable names and descriptions.
-1. `data/YYYY-MM-DD-companies.xz`: Dataset with suppliers info containing all the fields offered in the [Federal Revenue alternative API](http://receitaws.com.br) and complemented with geolocation (latitude and longitude) gathered from Google Maps.
-
-## Four moments
-
-The project basically happens in four moments, and contributions are welcomed in all of them:
-
-| Moment | Description | Focus | Target |
-|--------|-------------|-------|--------|
-| **Possibilities** | To structure hypothesis and strategies taking into account (a) the source of the data, (b) how feasible it is to get this data, and (c) what is the purpose of bringing this data into the project.| Contributions here require more sagacity than technical skills.| [GitHub Issues](https://github.com/codelandev/serenata-de-amor/issues) |
-| **Data collection** | Once one agrees that a certain _possibility_ is worth it, one might want to start writing code to get the data (this script's go into `src/`). | Technical skills in scrapping data and using APIs. | `src/` and `data/` |
-| **Exploring** | Once data is ready to be used, one might want to start exploring and analyzing it. | Here what matters is mostly data science skills. | `develop/` |
-| **Reporting** | Once a relevant finding emerge from the previous stages, this finding might be gathered with similar other findings (e.g. put together explorations on air tickets, car rentals and geolocation under a report on transportation) on a report. | Contributions here requires good communication skills and very basic understanding of quantitative methods. | `report/` |
-
-## Jarbas
-
-As soon as we started _Serenata de Amor_ [we felt the need for a simple webservice](https://github.com/datasciencebr/serenata-de-amor/issues/34) to browse our data and refer to documents we analize. This is how [Jarbas](https://github.com/datasciencebr/jarbas) was created.
-
-If you fancy web development, feel free to check Jarba's source code, to check [Jarba's own Issues](https://github.com/datasciencebr/jarbas/issues) and to contribute there too.
+From your fork at GitHub usually there is a button to open pull requests.

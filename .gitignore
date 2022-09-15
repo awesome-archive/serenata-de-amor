@@ -1,6 +1,27 @@
+# development environment
+.coverage
+.env
+.floo
+*.sqlite3
+db/
+htmlcov/
+npm-debug.log
+
+# cache, compiled & downloaded files
 *.pyc
-.ipynb_checkpoints
-.python-version
+.webassets-cache/
 __pycache__/
-config.ini
-data
+app.css
+app.js
+ceap-datasets.html
+elm-stuff/
+jarbas/frontend/tests/Doc/
+jarbas/frontend/tests/elm-package.json
+node_modules/
+staticfiles/
+
+# vim stuff
+*.swp
+
+# ansible stuff
+contrib/update/update.retry

@@ -1,0 +1,57 @@
+version: "3"
+services:
+
+  cache:
+    image: memcached:1.5.8-alpine
+    restart: always
+
+  elm:
+    hostname: elm
+    image: serenata/elm
+    restart: on-failure
+
+  django:
+    command: ["gunicorn", "jarbas.wsgi:application", "--reload", "--bind", "0.0.0.0:8000", "--workers", $WEB_WORKERS, "--log-level", $LOG_LEVEL, "--timeout", $WEB_TIMEOUT]
+    depends_on:
+      - cache
+      - elm
+      - tasks
+    env_file:
+      - .env
+    environment:
+      - NEW_RELIC_APP_NAME=Jarbas (Django); Jarbas (Combined)
+    hostname: django
+    image: serenata/django
+    restart: always
+
+  queue:
+    hostname: queue
+    image: rabbitmq:3.7.3-alpine
+    restart: on-failure
+
+  rosie:
+    image: serenata/rosie
+
+  tasks:
+    command: ["newrelic-admin", "run-program", "celery", "worker", "--app", "jarbas"]
+    depends_on:
+      - queue
+    env_file:
+      - .env
+    environment:
+      - NEW_RELIC_APP_NAME=Jarbas (Celery); Jarbas (Combined)
+    hostname: tasks
+    image: serenata/django
+    restart: always
+
+  beat:
+    command: ["newrelic-admin", "run-program", "celery", "beat", "--app", "jarbas"]
+    depends_on:
+      - queue
+    env_file:
+      - .env
+    environment:
+      - NEW_RELIC_APP_NAME=Jarbas (Beat); Jarbas (Combined)
+    hostname: beat
+    image: serenata/django
+    restart: always
